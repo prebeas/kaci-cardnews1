@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KACI AI 컴퓨팅 특성화 카드뉴스 스튜디오</title>
+  <!-- Tailwind CSS & Pretendard 폰트 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    * {
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #030712;
+      color: #f8fafc;
+    }
+    /* 스크롤바 완전 숨김 */
+    ::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    .neon-border {
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.12);
+    }
+    .active-tab {
+      background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+      color: #ffffff !important;
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(0, 198, 255, 0.4);
+    }
+    .active-scale {
+      background: #0284c7;
+      color: #ffffff !important;
+      border-color: #38bdf8 !important;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen select-none">
+
+  <!-- 1. 최상단 고정 헤더 & 통합 컨트롤 바 -->
+  <header class="flex-none bg-slate-950/95 border-b border-slate-800 backdrop-blur-md z-40 px-5 py-2.5">
+    <div class="flex flex-wrap items-center justify-between gap-3 max-w-[1920px] mx-auto">
+      
+      <!-- 좌측: 브랜드 & 엔진 정보 -->
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+            KACI AI COMPUTING CARDNEWS STUDIO
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Native 2D Engine</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">1080px 초고해상도 규격별 전용 아트디렉션 & 무압축 개별 다운로더</p>
+        </div>
+      </div>
+
+      <!-- 중앙: 배율 조절 버튼 & 스크롤 이동 버튼 -->
+      <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-lg p-1">
+        <span class="text-[11px] text-slate-400 px-2 font-medium">배율</span>
+        <button id="btn-fit" onclick="setScaleMode('fit')" class="px-2.5 py-1 text-xs rounded border border-transparent active-scale transition">화면 맞춤</button>
+        <button id="btn-100" onclick="setScaleMode(1.0)" class="px-2.5 py-1 text-xs rounded border border-transparent text-slate-300 hover:text-white transition">100%</button>
+        <button id="btn-85" onclick="setScaleMode(0.85)" class="px-2.5 py-1 text-xs rounded border border-transparent text-slate-300 hover:text-white transition">85%</button>
+        
+        <div class="h-4 w-px bg-slate-800 mx-1"></div>
+        <button onclick="scrollViewer(-400)" class="p-1 hover:bg-slate-800 rounded text-slate-300" title="좌측 스크롤">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button onclick="scrollViewer(400)" class="p-1 hover:bg-slate-800 rounded text-slate-300" title="우측 스크롤">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- 우측: 무압축 규격별 / 전체 일괄 다운로드 버튼 그룹 -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="downloadFormatBatch('4x5')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center gap-1.5 shadow-sm">
+          <span>인스타 4:5</span>
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-cyan-300">5장 개별</span>
+        </button>
+        <button onclick="downloadFormatBatch('1x1')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center gap-1.5 shadow-sm">
+          <span>정사각형 1:1</span>
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-cyan-300">5장 개별</span>
+        </button>
+        <button onclick="downloadFormatBatch('9x16')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center gap-1.5 shadow-sm">
+          <span>숏폼 9:16</span>
+          <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-cyan-300">5장 개별</span>
+        </button>
+        <button onclick="downloadAll15()" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs font-bold text-white shadow-lg shadow-cyan-500/25 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>전체 15종 일괄 저장</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2층: 슬라이드 탭 & 설명 -->
+    <div class="flex items-center justify-between gap-4 mt-2.5 pt-2 border-t border-slate-900/80 max-w-[1920px] mx-auto">
+      <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <span class="text-xs font-semibold text-slate-400 mr-1 flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+          슬라이드 선택:
+        </span>
+        <button onclick="selectSlide(0)" id="tab-0" class="slide-tab px-3 py-1 rounded-md text-xs border border-slate-800 text-slate-300 hover:bg-slate-900 active-tab transition">1장 표지 (Hook)</button>
+        <button onclick="selectSlide(1)" id="tab-1" class="slide-tab px-3 py-1 rounded-md text-xs border border-slate-800 text-slate-300 hover:bg-slate-900 transition">2장 문제제기 (비교)</button>
+        <button onclick="selectSlide(2)" id="tab-2" class="slide-tab px-3 py-1 rounded-md text-xs border border-slate-800 text-slate-300 hover:bg-slate-900 transition">3장 4단계 로드맵</button>
+        <button onclick="selectSlide(3)" id="tab-3" class="slide-tab px-3 py-1 rounded-md text-xs border border-slate-800 text-slate-300 hover:bg-slate-900 transition">4장 차별화 혜택</button>
+        <button onclick="selectSlide(4)" id="tab-4" class="slide-tab px-3 py-1 rounded-md text-xs border border-slate-800 text-slate-300 hover:bg-slate-900 transition">5장 진로 & CTA</button>
+      </div>
+
+      <div class="text-[12px] text-slate-400 flex items-center gap-3">
+        <span id="slide-desc" class="hidden sm:inline font-medium text-slate-300">표지 (Hook & Headline) - 3대 플랫폼 전용 레이아웃 3단 가로 비교</span>
+        <button onclick="downloadCurrentSlide3()" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 text-[11px] font-medium transition">
+          현재 슬라이드 3종 개별저장
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. 중앙 메인 가로 뷰어 컨테이너 (세로 스크롤 없음, 가로 나열) -->
+  <main id="viewer-container" class="flex-1 overflow-x-auto overflow-y-hidden p-6 flex items-center justify-start gap-8">
+    <div id="cards-scaler" class="flex items-center gap-8 mx-auto transition-transform duration-200 origin-center">
+      
+      <!-- [1] 인스타그램 세로형 (4:5) 카드 -->
+      <div class="card-wrapper flex flex-col items-center gap-3">
+        <div class="flex items-center justify-between w-full px-2 text-xs text-slate-300">
+          <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            인스타그램 세로형 (4:5)
+          </span>
+          <span class="text-[11px] text-slate-500">1080 × 1350 px</span>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden neon-border shadow-2xl bg-slate-950">
+          <canvas id="canvas-4x5" width="1080" height="1350" class="block w-[360px] h-[450px] object-contain"></canvas>
+        </div>
+        <button onclick="downloadSingle('4x5')" class="w-full py-2 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center justify-center gap-2 shadow-lg">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          1080px 고화질 PNG 다운로드
+        </button>
+      </div>
+
+      <!-- [2] 정사각형 기본형 (1:1) 카드 -->
+      <div class="card-wrapper flex flex-col items-center gap-3">
+        <div class="flex items-center justify-between w-full px-2 text-xs text-slate-300">
+          <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            정사각형 기본형 (1:1)
+          </span>
+          <span class="text-[11px] text-slate-500">1080 × 1080 px</span>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden neon-border shadow-2xl bg-slate-950">
+          <canvas id="canvas-1x1" width="1080" height="1080" class="block w-[400px] h-[400px] object-contain"></canvas>
+        </div>
+        <button onclick="downloadSingle('1x1')" class="w-full py-2 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center justify-center gap-2 shadow-lg">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          1080px 고화질 PNG 다운로드
+        </button>
+      </div>
+
+      <!-- [3] 세로 숏폼 릴스형 (9:16) 카드 -->
+      <div class="card-wrapper flex flex-col items-center gap-3">
+        <div class="flex items-center justify-between w-full px-2 text-xs text-slate-300">
+          <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            세로 숏폼 릴스형 (9:16)
+          </span>
+          <span class="text-[11px] text-slate-500">1080 × 1920 px</span>
+        </div>
+        <div class="relative rounded-2xl overflow-hidden neon-border shadow-2xl bg-slate-950">
+          <canvas id="canvas-9x16" width="1080" height="1920" class="block w-[281px] h-[500px] object-contain"></canvas>
+        </div>
+        <button onclick="downloadSingle('9x16')" class="w-full py-2 px-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 text-xs font-semibold text-slate-200 hover:text-cyan-400 transition flex items-center justify-center gap-2 shadow-lg">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          1080px 고화질 PNG 다운로드
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 3. 실시간 다운로드 진행 모달 -->
+  <div id="progress-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-900 border border-cyan-500/50 rounded-2xl p-6 w-[420px] shadow-2xl shadow-cyan-500/20 text-center">
+      <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center mx-auto mb-4 animate-spin">
+        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </div>
+      <h3 id="modal-title" class="text-base font-bold text-white mb-1">고화질 이미지 순차 저장 중...</h3>
+      <p id="modal-filename" class="text-xs text-cyan-400 font-mono mb-4">KACI_01_인스타세로4x5_표지.png</p>
+      
+      <!-- 프로그레스 바 -->
+      <div class="w-full bg-slate-800 rounded-full h-2 mb-2 overflow-hidden border border-slate-700">
+        <div id="modal-bar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+      </div>
+      <div class="flex justify-between text-[11px] text-slate-400 mb-5">
+        <span id="modal-count">1 / 15 파일 완료</span>
+        <span id="modal-percent">7%</span>
+      </div>
+
+      <button onclick="cancelBatchDownload()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">
+        다운로드 중단
+      </button>
+    </div>
+  </div>
+
+  <!-- 오프스크린 렌더링 캔버스 (일괄 다운로드용) -->
+  <canvas id="offscreen-canvas" class="hidden"></canvas>
+
+  <script>
+    // 5개 슬라이드 전체 데이터 세트
+    const SLIDES_DATA = [
+      {
+        index: 1,
+        name: "표지",
+        desc: "표지 (Hook & Headline) - 3대 플랫폼 전용 레이아웃 3단 가로 비교",
+        badge: "KACI AI 컴퓨팅 특성화 교육과정",
+        hook: "단순 코딩 배운 전공자 vs AI 인프라 다루는 전공자",
+        subhook: "기업이 지금 당장 찾는 AI 인재의 기준이 바뀝니다.",
+        footer: "KACI 기반 AI 컴퓨팅 특성화 교육과정 핵심 요약"
+      },
+      {
+        index: 2,
+        name: "문제비교",
+        desc: "문제 제기 & 비교 (일반 학과 vs KACI 하이엔드 인프라 과정)",
+        title: "ChatGPT 써보기만 하는 개발자는 경쟁력이 없습니다",
+        leftTitle: "기존 SW/컴공 과정",
+        leftItems: [
+          "개인 PC 기반 단일 환경 실습",
+          "이론 중심 기본 알고리즘 학습",
+          "일반 웹/앱 범용 개발 집중",
+          "외부 AI 모델 단순 API 호출"
+        ],
+        rightTitle: "KACI AI 컴퓨팅 과정",
+        rightItems: [
+          "초거대 LLM 파인튜닝 실무",
+          "대규모 GPU 클러스터 병렬 연산",
+          "CUDA 가속 & HPC 인프라 제어",
+          "24/7 무중단 실시간 서빙 파이프라인"
+        ],
+        highlight: "모델을 '호출'하는 엔지니어가 아닌, 최적화하고 '서빙'하는 하이엔드 엔지니어 양성"
+      },
+      {
+        index: 3,
+        name: "4단계로드맵",
+        desc: "4단계 핵심 로드맵 (기초부터 MLOps까지 빈틈없는 파이프라인)",
+        title: "기초부터 MLOps까지, 빈틈없는 4단계 파이프라인",
+        steps: [
+          { step: "Step 01", title: "기초 컴퓨팅 & C·Python", sub: "선형대수, 컴퓨터 구조, C/Python 핵심 언어 기본기" },
+          { step: "Step 02", title: "PyTorch & 딥러닝 핵심", sub: "AI/ML 알고리즘 이해, PyTorch 기반 딥러닝 모델 구현" },
+          { step: "Step 03", title: "CUDA 가속 & HPC 인프라", sub: "CUDA 가속 프로그래밍, 분산 학습, 고성능 클러스터 제어" },
+          { step: "Step 04", title: "모델 경량화 & MLOps 실전", sub: "대규모 모델 경량화(Pruning/Quant), 실전 캡스톤 프로젝트" }
+        ]
+      },
+      {
+        index: 4,
+        name: "차별화혜택",
+        desc: "차별화 포인트 & 혜택 (Why KACI? 개인이 구축할 수 없는 초격차)",
+        title: "개인이 절대 구축할 수 없는 초격차 실습 인프라",
+        benefits: [
+          { title: "실제 GPU 클러스터 활용", sub: "엔터프라이즈급 컴퓨팅 자원 직접 제어 및 대규모 분산 훈련 실습", badge: "H100 / A100 GPU" },
+          { title: "현업 스택 직결", sub: "Docker, Kubernetes 기반 24/7 무중단 실시간 모델 서빙 역량 확보", badge: "PROD READY" },
+          { title: "산학 연계 네트워크", sub: "협회 회원사 네트워크를 통한 실무 캡스톤 프로젝트 및 채용 연계", badge: "CAREER BRIDGE" }
+        ]
+      },
+      {
+        index: 5,
+        name: "진로CTA",
+        desc: "진로 & 행동 유도 (AI 인프라를 지배하는 엔지니어로 도약)",
+        title: "AI 인프라를 지배하는 엔지니어로 도약하세요",
+        subtitle: "기업의 AI 전환을 선도하는 고연봉 핵심 포지션으로 진출합니다.",
+        careers: [
+          { title: "AI 모델 최적화 연구원", sub: "초거대 모델 경량화 및 추론 최적화" },
+          { title: "MLOps 엔지니어", sub: "배포 파이프라인 및 서빙 아키텍처" },
+          { title: "HPC 시스템 아키텍트", sub: "초고성능 클러스터 분산 환경 구축" },
+          { title: "데이터 인프라 엔지니어", sub: "대규모 학습 데이터 파이프라인 관리" }
+        ],
+        ctaBtn: "상세 커리큘럼 및 참여 신청 확인하기",
+        ctaLink: "👉 kaci.ai.kr (프로필 링크 클릭)"
+      }
+    ];
+
+    let currentSlideIdx = 0;
+    let currentScaleMode = 'fit';
+    let isBatchCancelling = false;
+
+    // Native 2D Canvas 렌더링 함수
+    function renderCardToCanvas(slideIdx, format, canvas) {
+      const data = SLIDES_DATA[slideIdx];
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // 1. 배경 그라디언트
+      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+      bgGrad.addColorStop(0, '#060a17');
+      bgGrad.addColorStop(0.5, '#0a1428');
+      bgGrad.addColorStop(1, '#050914');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // 2. 하이테크 그리드 & 앰비언트 글로우
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.05)';
+      ctx.lineWidth = 1;
+      const gridSize = 60;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const leftGlow = ctx.createRadialGradient(0, h * 0.4, 10, 0, h * 0.4, 400);
+      leftGlow.addColorStop(0, 'rgba(0, 242, 254, 0.15)');
+      leftGlow.addColorStop(1, 'rgba(0, 242, 254, 0)');
+      ctx.fillStyle = leftGlow;
+      ctx.fillRect(0, 0, 400, h);
+
+      const rightGlow = ctx.createRadialGradient(w, h * 0.6, 10, w, h * 0.6, 400);
+      rightGlow.addColorStop(0, 'rgba(0, 114, 255, 0.18)');
+      rightGlow.addColorStop(1, 'rgba(0, 114, 255, 0)');
+      ctx.fillStyle = rightGlow;
+      ctx.fillRect(w - 400, 0, 400, h);
+      ctx.restore();
+
+      // 3. 슬라이드별 전용 레이아웃 렌더링
+      if (slideIdx === 0) renderSlide1(ctx, w, h, format, data);
+      else if (slideIdx === 1) renderSlide2(ctx, w, h, format, data);
+      else if (slideIdx === 2) renderSlide3(ctx, w, h, format, data);
+      else if (slideIdx === 3) renderSlide4(ctx, w, h, format, data);
+      else if (slideIdx === 4) renderSlide5(ctx, w, h, format, data);
+
+      // 4. 안전 영역 외곽선
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(30, 30, w - 60, h - 60);
+      ctx.restore();
+    }
+
+    function renderSlide1(ctx, w, h, format, d) {
+      let topY = format === '9x16' ? 320 : (format === '4x5' ? 180 : 130);
+      drawPillBadge(ctx, w / 2, topY, d.badge, '#00F2FE');
+
+      let headY = topY + (format === '9x16' ? 240 : 180);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 54px Pretendard, sans-serif';
+      ctx.fillText('단순 코딩 배운 전공자', w / 2, headY);
+
+      ctx.fillStyle = '#00F2FE';
+      ctx.font = 'bold 36px Pretendard, sans-serif';
+      ctx.fillText('VS', w / 2, headY + 70);
+
+      ctx.fillStyle = '#00F2FE';
+      ctx.font = '900 60px Pretendard, sans-serif';
+      ctx.fillText('AI 인프라 다루는 전공자', w / 2, headY + 155);
+
+      let subY = headY + 280;
+      ctx.fillStyle = '#F8FAFC';
+      ctx.font = '600 36px Pretendard, sans-serif';
+      ctx.fillText('기업이 지금 당장 찾는', w / 2, subY);
+      ctx.fillText('AI 인재의 기준이 바뀝니다.', w / 2, subY + 55);
+
+      let footY = format === '9x16' ? h - 340 : (format === '4x5' ? h - 220 : h - 170);
+      drawGlassCard(ctx, 120, footY, w - 240, 110, '#0a192f', 'rgba(0, 242, 254, 0.4)');
+      ctx.fillStyle = '#00F2FE';
+      ctx.font = 'bold 28px Pretendard, sans-serif';
+      ctx.fillText(d.footer, w / 2, footY + 65);
+    }
+
+    function renderSlide2(ctx, w, h, format, d) {
+      let topY = format === '9x16' ? 260 : (format === '4x5' ? 140 : 100);
+      drawCategoryTag(ctx, w / 2, topY, 'PARADIGM SHIFT', '#EF4444');
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 42px Pretendard, sans-serif';
+      wrapText(ctx, `"${d.title}"`, w / 2, topY + 75, w - 160, 56);
+
+      if (format === '1x1') {
+        let boxW = (w - 180) / 2;
+        let boxH = 480;
+        let boxY = topY + 220;
+        renderCompareBox(ctx, 70, boxY, boxW, boxH, d.leftTitle, d.leftItems, false);
+        renderCompareBox(ctx, 70 + boxW + 40, boxY, boxW, boxH, d.rightTitle, d.rightItems, true);
+        drawHighlightBox(ctx, 70, boxY + boxH + 40, w - 140, 100, d.highlight);
+      } else {
+        let boxW = w - 160;
+        let boxH = format === '9x16' ? 360 : 280;
+        let box1Y = topY + 200;
+        renderCompareBox(ctx, 80, box1Y, boxW, boxH, d.leftTitle, d.leftItems, false);
+        let box2Y = box1Y + boxH + 30;
+        renderCompareBox(ctx, 80, box2Y, boxW, boxH, d.rightTitle, d.rightItems, true);
+        drawHighlightBox(ctx, 80, box2Y + boxH + 35, boxW, 110, d.highlight);
+      }
+    }
+
+    function renderSlide3(ctx, w, h, format, d) {
+      let topY = format === '9x16' ? 260 : (format === '4x5' ? 140 : 90);
+      drawCategoryTag(ctx, w / 2, topY, 'CURRICULUM PIPELINE', '#00F2FE');
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 44px Pretendard, sans-serif';
+      wrapText(ctx, `"${d.title}"`, w / 2, topY + 75, w - 160, 56);
+
+      let startY = topY + 200;
+      let cardW = w - 180;
+      let cardH = format === '9x16' ? 200 : (format === '4x5' ? 170 : 130);
+      let gap = format === '9x16' ? 35 : (format === '4x5' ? 24 : 18);
+
+      d.steps.forEach((step, i) => {
+        let y = startY + i * (cardH + gap);
+        drawGlassCard(ctx, 90, y, cardW, cardH, '#0a1628', 'rgba(0, 242, 254, 0.3)');
+        ctx.fillStyle = '#00F2FE';
+        ctx.font = '900 24px Pretendard, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(step.step, 130, y + 45);
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 30px Pretendard, sans-serif';
+        ctx.fillText(step.title, 130, y + 88);
+
+        ctx.fillStyle = '#CBD5E1';
+        ctx.font = '500 22px Pretendard, sans-serif';
+        ctx.fillText(step.sub, 130, y + 128);
+      });
+    }
+
+    function renderSlide4(ctx, w, h, format, d) {
+      let topY = format === '9x16' ? 260 : (format === '4x5' ? 150 : 100);
+      drawCategoryTag(ctx, w / 2, topY, 'UNRIVALED ADVANTAGE', '#10B981');
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 44px Pretendard, sans-serif';
+      wrapText(ctx, `"${d.title}"`, w / 2, topY + 75, w - 160, 56);
+
+      let startY = topY + 200;
+      let cardW = w - 180;
+      let cardH = format === '9x16' ? 260 : (format === '4x5' ? 210 : 160);
+      let gap = format === '9x16' ? 40 : 28;
+
+      d.benefits.forEach((item, i) => {
+        let y = startY + i * (cardH + gap);
+        drawGlassCard(ctx, 90, y, cardW, cardH, '#0c1a2e', 'rgba(16, 185, 129, 0.4)');
+        drawMiniTag(ctx, 90 + cardW - 160, y + 35, item.badge, '#10B981');
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 34px Pretendard, sans-serif';
+        ctx.fillText(item.title, 130, y + 65);
+
+        ctx.fillStyle = '#CBD5E1';
+        ctx.font = '500 24px Pretendard, sans-serif';
+        wrapText(ctx, item.sub, 130, y + 115, cardW - 100, 38);
+      });
+    }
+
+    function renderSlide5(ctx, w, h, format, d) {
+      let topY = format === '9x16' ? 260 : (format === '4x5' ? 150 : 100);
+      drawCategoryTag(ctx, w / 2, topY, 'CAREER TRANSFORMATION', '#38BDF8');
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 44px Pretendard, sans-serif';
+      wrapText(ctx, `"${d.title}"`, w / 2, topY + 75, w - 160, 56);
+
+      ctx.fillStyle = '#94A3B8';
+      ctx.font = '500 24px Pretendard, sans-serif';
+      ctx.fillText(d.subtitle, w / 2, topY + 160);
+
+      let gridY = topY + 220;
+      let cardW = (w - 210) / 2;
+      let cardH = format === '9x16' ? 180 : 140;
+      
+      d.careers.forEach((c, i) => {
+        let col = i % 2;
+        let row = Math.floor(i / 2);
+        let x = 90 + col * (cardW + 30);
+        let y = gridY + row * (cardH + 25);
+
+        drawGlassCard(ctx, x, y, cardW, cardH, '#091526', 'rgba(56, 189, 248, 0.3)');
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#00F2FE';
+        ctx.font = 'bold 28px Pretendard, sans-serif';
+        ctx.fillText(c.title, x + 30, y + 55);
+
+        ctx.fillStyle = '#CBD5E1';
+        ctx.font = '500 20px Pretendard, sans-serif';
+        wrapText(ctx, c.sub, x + 30, y + 95, cardW - 50, 30);
+      });
+
+      let ctaY = format === '9x16' ? h - 380 : (format === '4x5' ? h - 260 : h - 180);
+      let btnGrad = ctx.createLinearGradient(90, ctaY, w - 90, ctaY);
+      btnGrad.addColorStop(0, '#00c6ff');
+      btnGrad.addColorStop(1, '#0072ff');
+      
+      roundRect(ctx, 90, ctaY, w - 180, 100, 20);
+      ctx.fillStyle = btnGrad;
+      ctx.fill();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 32px Pretendard, sans-serif';
+      ctx.fillText(d.ctaBtn, w / 2, ctaY + 62);
+
+      ctx.fillStyle = '#FEF08A';
+      ctx.font = 'bold 26px Pretendard, sans-serif';
+      ctx.fillText(d.ctaLink, w / 2, ctaY + 150);
+    }
+
+    // 보조 그래픽 함수
+    function drawPillBadge(ctx, x, y, text, color) {
+      ctx.save();
+      ctx.font = 'bold 22px Pretendard, sans-serif';
+      let tw = ctx.measureText(text).width + 50;
+      roundRect(ctx, x - tw / 2, y - 24, tw, 48, 24);
+      ctx.fillStyle = 'rgba(0, 242, 254, 0.08)';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y + 8);
+      ctx.restore();
+    }
+
+    function drawCategoryTag(ctx, x, y, text, color) {
+      ctx.save();
+      ctx.font = '900 20px Pretendard, monospace';
+      let tw = ctx.measureText(text).width + 36;
+      roundRect(ctx, x - tw / 2, y - 20, tw, 40, 8);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y + 7);
+      ctx.restore();
+    }
+
+    function drawMiniTag(ctx, x, y, text, color) {
+      ctx.save();
+      ctx.font = 'bold 16px Pretendard, sans-serif';
+      let tw = ctx.measureText(text).width + 24;
+      roundRect(ctx, x, y, tw, 30, 6);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.fillText(text, x + 12, y + 21);
+      ctx.restore();
+    }
+
+    function drawGlassCard(ctx, x, y, w, h, bg, border) {
+      roundRect(ctx, x, y, w, h, 18);
+      ctx.fillStyle = bg;
+      ctx.fill();
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    function renderCompareBox(ctx, x, y, w, h, title, items, isKaci) {
+      drawGlassCard(ctx, x, y, w, h, isKaci ? '#081a33' : '#0b1120', isKaci ? '#00F2FE' : '#334155');
+      ctx.textAlign = 'left';
+      ctx.fillStyle = isKaci ? '#00F2FE' : '#94A3B8';
+      ctx.font = 'bold 30px Pretendard, sans-serif';
+      ctx.fillText(title, x + 35, y + 55);
+
+      let startItemY = y + 115;
+      let lineGap = (h - 130) / items.length;
+      items.forEach((item, idx) => {
+        let iy = startItemY + idx * lineGap;
+        ctx.fillStyle = isKaci ? '#00F2FE' : '#EF4444';
+        ctx.font = 'bold 24px Pretendard, sans-serif';
+        ctx.fillText(isKaci ? '✓' : '×', x + 35, iy);
+
+        ctx.fillStyle = isKaci ? '#F8FAFC' : '#CBD5E1';
+        ctx.font = '500 24px Pretendard, sans-serif';
+        ctx.fillText(item, x + 70, iy);
+      });
+    }
+
+    function drawHighlightBox(ctx, x, y, w, h, text) {
+      drawGlassCard(ctx, x, y, w, h, '#061325', '#0284c7');
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#38BDF8';
+      ctx.font = 'bold 24px Pretendard, sans-serif';
+      wrapText(ctx, text, x + w / 2, y + 45, w - 60, 36);
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + width - radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      let currentY = y;
+      for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = ctx.measureText(testLine);
+        let testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line.trim(), x, currentY);
+          line = words[n] + ' ';
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line.trim(), x, currentY);
+    }
+
+    // 인터랙션 제어
+    function selectSlide(idx) {
+      currentSlideIdx = idx;
+      document.querySelectorAll('.slide-tab').forEach((el, i) => {
+        if (i === idx) el.classList.add('active-tab');
+        else el.classList.remove('active-tab');
+      });
+      document.getElementById('slide-desc').innerText = SLIDES_DATA[idx].desc;
+      renderCurrentPreviews();
+    }
+
+    function renderCurrentPreviews() {
+      renderCardToCanvas(currentSlideIdx, '4x5', document.getElementById('canvas-4x5'));
+      renderCardToCanvas(currentSlideIdx, '1x1', document.getElementById('canvas-1x1'));
+      renderCardToCanvas(currentSlideIdx, '9x16', document.getElementById('canvas-9x16'));
+    }
+
+    function scrollViewer(amount) {
+      document.getElementById('viewer-container').scrollBy({ left: amount, behavior: 'smooth' });
+    }
+
+    function setScaleMode(mode) {
+      currentScaleMode = mode;
+      ['btn-fit', 'btn-100', 'btn-85'].forEach(id => {
+        document.getElementById(id).classList.remove('active-scale');
+      });
+      if (mode === 'fit') document.getElementById('btn-fit').classList.add('active-scale');
+      else if (mode === 1.0) document.getElementById('btn-100').classList.add('active-scale');
+      else if (mode === 0.85) document.getElementById('btn-85').classList.add('active-scale');
+      updateScale();
+    }
+
+    function updateScale() {
+      const scaler = document.getElementById('cards-scaler');
+      if (currentScaleMode === 'fit') {
+        const availableHeight = window.innerHeight - 170;
+        const targetHeight = 620;
+        const scale = Math.min(1, Math.max(0.65, availableHeight / targetHeight));
+        scaler.style.transform = `scale(${scale})`;
+      } else {
+        scaler.style.transform = `scale(${currentScaleMode})`;
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentScaleMode === 'fit') updateScale();
+    });
+
+    // 다운로드 파이프라인
+    function downloadSingle(format) {
+      const canvas = document.getElementById(`canvas-${format}`);
+      const slide = SLIDES_DATA[currentSlideIdx];
+      const filename = `KACI_0${slide.index}_${getFormatLabel(format)}_${slide.name}.png`;
+      triggerCanvasDownload(canvas, filename);
+    }
+
+    function downloadCurrentSlide3() {
+      const formats = ['4x5', '1x1', '9x16'];
+      const tasks = formats.map(fmt => ({ slideIdx: currentSlideIdx, format: fmt }));
+      executeDownloadQueue(tasks, `슬라이드 ${currentSlideIdx + 1} (3종 규격) 다운로드 중...`);
+    }
+
+    function downloadFormatBatch(format) {
+      const tasks = [];
+      for (let s = 0; s < 5; s++) tasks.push({ slideIdx: s, format: format });
+      executeDownloadQueue(tasks, `${getFormatLabel(format)} 5장 일괄 다운로드 중...`);
+    }
+
+    function downloadAll15() {
+      const tasks = [];
+      const formats = ['4x5', '1x1', '9x16'];
+      for (let s = 0; s < 5; s++) {
+        for (let f of formats) tasks.push({ slideIdx: s, format: f });
+      }
+      executeDownloadQueue(tasks, '전체 15종 일괄 다운로드 중...');
+    }
+
+    function getFormatLabel(format) {
+      if (format === '4x5') return '인스타세로4x5';
+      if (format === '1x1') return '정사각형1x1';
+      return '숏폼릴스9x16';
+    }
+
+    function triggerCanvasDownload(canvas, filename) {
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }, 'image/png');
+    }
+
+    async function executeDownloadQueue(tasks, titleText) {
+      isBatchCancelling = false;
+      const modal = document.getElementById('progress-modal');
+      const titleEl = document.getElementById('modal-title');
+      const filenameEl = document.getElementById('modal-filename');
+      const barEl = document.getElementById('modal-bar');
+      const countEl = document.getElementById('modal-count');
+      const percentEl = document.getElementById('modal-percent');
+      const offCanvas = document.getElementById('offscreen-canvas');
+
+      titleEl.innerText = titleText;
+      modal.classList.remove('hidden');
+
+      const total = tasks.length;
+      for (let i = 0; i < total; i++) {
+        if (isBatchCancelling) break;
+
+        const task = tasks[i];
+        const slide = SLIDES_DATA[task.slideIdx];
+        const filename = `KACI_0${slide.index}_${getFormatLabel(task.format)}_${slide.name}.png`;
+
+        if (task.format === '4x5') { offCanvas.width = 1080; offCanvas.height = 1350; }
+        else if (task.format === '1x1') { offCanvas.width = 1080; offCanvas.height = 1080; }
+        else { offCanvas.width = 1080; offCanvas.height = 1920; }
+
+        renderCardToCanvas(task.slideIdx, task.format, offCanvas);
+        triggerCanvasDownload(offCanvas, filename);
+
+        filenameEl.innerText = filename;
+        const progress = Math.round(((i + 1) / total) * 100);
+        barEl.style.width = `${progress}%`;
+        countEl.innerText = `${i + 1} / ${total} 파일 완료`;
+        percentEl.innerText = `${progress}%`;
+
+        await new Promise(r => setTimeout(r, 450));
+      }
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 500);
+    }
+
+    function cancelBatchDownload() {
+      isBatchCancelling = true;
+      document.getElementById('progress-modal').classList.add('hidden');
+    }
+
+    window.onload = () => {
+      document.fonts.ready.then(() => {
+        renderCurrentPreviews();
+        updateScale();
+      });
+    };
+  </script>
+</body>
+</html>
